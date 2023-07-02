@@ -18,8 +18,12 @@ def poke_request_list(PH1):
             list.append(i['name'])
         return list
 
-def poke_list_ID():
-    pass
+def poke_list_ID(pokemon_name):
+    id_request=requests.get('https://pokeapi.co/api/v2/pokemon/{poke_name}'.format(poke_name=pokemon_name))
+    id_response=id_request.json()
+    id=id_response.get('id')
+    return id
+    
 #Parsers part of the code where the parser are set 
 #main parser set 
 parser = argparse.ArgumentParser()
@@ -44,7 +48,9 @@ def main():
         print('------all 1st Gen pokemon------')
         print('ID---------NAME')
         for i in pokemon_list:
-            print(i)
+            pokemon_id=poke_list_ID(i)
+            print(pokemon_id,i)
+           
            
             
     
