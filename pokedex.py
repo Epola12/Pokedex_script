@@ -49,11 +49,9 @@ def main():
         print('ID---------NAME')
         for i in pokemon_list:
             pokemon_id=poke_list_ID(i)
-            print(pokemon_id,i)
-           
-           
-            
-    
+            id_str=str(pokemon_id)
+            print(id_str.zfill(3))
+        
 if __name__== '__main__':
     main()    
 
