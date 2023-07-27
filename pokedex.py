@@ -33,6 +33,8 @@ parser.add_argument('pokedex',type=str,
 subparser=parser.add_subparsers(help='sub-command help')
 sub_list=subparser.add_parser('list',help='Display a list of all the 1rs gen Pokemon')
 sub_list.add_argument('-n','--number',type=int, help='Display the given pokemon')
+sub_evo=subparser.add_parser('evolution',help='Show the given pokemon evolution in a table')
+sub_evo.add_argument('-t','--table', help='')
 args=parser.parse_args()
 given_pokemon=args.number
 
