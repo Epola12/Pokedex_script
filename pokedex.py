@@ -1,6 +1,6 @@
 import argparse
 import requests
-# import json
+import json
 
 # TODO: investigate list comprehension
 
@@ -63,7 +63,43 @@ def poke_R_evolution(pokemon_ID):
         return pre_evo.title(), poke_name
 
 
+def poke_R_info_a(id):
+    info_a_request = requests.get(
+         'https://pokeapi.co/api/v2/pokemon/{id}'
+         .format(id=id)
+        )
+    result = json.loads(info_a_request.text)
+    name = result.get('name')
+    extract = result.get('abilities')
+    abilities = []
+    for a in extract:
+        abilities.append(a.get('ability').get('name'))
+    return name, abilities
+
+
+def poke_R_info_h(id):
+    info_h_request = requests.get(
+     'https://pokeapi.co/api/v2/pokemon-species/{id}'
+     .format(id=id)
+    )
+    result = json.loads(info_h_request.text)
+    habitat = result.get('habitat').get('name')
+    name = result.get('name')
+    return name, habitat
+
 # build up of other functions that will be need it to finisht the program
+
+
+def table_builder(headers, data):
+    table_header = '|' + '|'. join(f'{h.center(len(str(c))+2)}'
+                                   for h, c in
+                                   zip(headers, data)) + '|'
+    table_separation = '|' + '|'.join('-' * (len(str(c))+2)
+                                      for c in data) + '|'
+    table_data = '|' + '|'.join(str(d).center(len(str(d))+2)for
+                                d, h in zip(data, headers)) + '|'
+    table = [table_header, table_separation, table_data]
+    return table
 
 
 # setting the main function to run according of the commmand
@@ -104,18 +140,38 @@ def poke_evolution():
         if evo_name:
             headers = ['ID', 'PokeName', 'EvoName']
             data = [poke_ID, pre_evo, evo_name]
-            table_header = '|' + '|'. join(f'{h.center(len(str(c))+2)}'
-                                           for h, c in
-                                           zip(headers, data)) + '|'
-            table_separation = '|' + '|'.join('-' * (len(str(c))+2)
-                                              for c in data) + '|'
-            table = '|' + '|'.join(str(d).center(len(str(d))+2)for
-                                   d, h in zip(data, headers)) + '|'
-            print(table_header)
-            print(table_separation)
-            print(table)
+            table = table_builder(headers, data)
+            for t in table:
+                print(t)
         else:
             print(f'The Pokemon {pre_evo} that you selected has no evolution')
+
+
+def poke_info():
+    # print(args)
+    poke_id = args.poke_id
+    if args.ability is False and args.habitat is False:
+        name, abilities = poke_R_info_a(poke_id)
+        name, habitat = poke_R_info_h(poke_id)
+        headers = ['ID', 'PokeName', 'Abilities', 'Habitat']
+        data = [poke_id, name, abilities, habitat]
+        table = table_builder(headers, data)
+        for t in table:
+            print(t)
+    elif args.ability:
+        name, abilities = poke_R_info_a(poke_id)
+        headers = ['ID', 'PokeName', 'Abilities']
+        data = [poke_id, name, abilities]
+        table = table_builder(headers, data)
+        for t in table:
+            print(t)
+    elif args.habitat:
+        name, habitat = poke_R_info_h(poke_id)
+        headers = ['ID', 'PokeName', 'Habitat']
+        data = [poke_id, name, habitat]
+        table = table_builder(headers, data)
+        for t in table:
+            print(t)
 
 
 # Parsers - part of the code where the parser are set
@@ -127,8 +183,12 @@ parser.add_argument('pokedex', type=str,
                     help='Command to access pokedex information')
 # setting subparsers
 subparser = parser.add_subparsers(dest='command')
+# list command parser
+
 sub_list = subparser.add_parser('list', help='list 1st gen pokemon')
 sub_list.add_argument('-n', '--number', type=int, help='Display the pokemon')
+# evolution command parser
+
 sub_evo = subparser.add_parser(
     'evolution', help='Show the given pokemon evolution in a table')
 sub_evo.add_argument(
@@ -138,6 +198,17 @@ sub_evo.add_argument(
                     'evo_ID',
                     type=int,
                     help='ID of the pokemon you need its evolution')
+# info command parser
+
+sub_info = subparser.add_parser('info',
+                                help='Show the given pokemon '
+                                'ability and habitat')
+sub_info.add_argument('-a', '--ability', action='store_true',
+                      help='Show the given pokemon abilitys')
+sub_info.add_argument('-ha', '--habitat', action='store_true',
+                      help='show given pokemon habitat')
+sub_info.add_argument('poke_id', type=int,
+                      help='ID of the pokemon you need info of')
 args = parser.parse_args()
 
 
@@ -147,6 +218,8 @@ def main():
         poke_list()
     elif args.command == 'evolution':
         poke_evolution()
+    elif args.command == 'info':
+        poke_info()
 
 
 if __name__ == '__main__':
