@@ -36,18 +36,34 @@ def poke_list_ID(pokemon_name):
 
 
 def poke_R_evolution(pokemon_ID):
-    evo_request = requests.get(
-                'https://pokeapi.co/api/v2/evolution-chain/{poke_id}'
-                .format(poke_id=pokemon_ID))
-    evo_response = evo_request.json()
-    substrat1 = list(evo_response.items())[1][1]
-    substrat2 = substrat1.get('evolves_to')
-    substrat3 = substrat2[0]
-    substrat4 = substrat3.get('species')
-    evolution = substrat4.get('name')
-    substrat5 = substrat1.get('species')
-    evolves_from = substrat5.get('name')
-    return evolves_from, evolution
+    try:
+        evo_request = requests.get(
+                    'https://pokeapi.co/api/v2/evolution-chain/{poke_id}'
+                    .format(poke_id=pokemon_ID))
+        evo_response = evo_request.json()
+        substrat1 = list(evo_response.items())[2][1]
+        substrat2 = substrat1.get('evolves_to')
+        substrat3 = substrat2[0]
+        substrat4 = substrat3.get('species')
+        evolution = substrat4.get('name')
+        substrat5 = substrat1.get('species')
+        evolves_from = substrat5.get('name')
+        return evolves_from.title(), evolution.title()
+    except Exception as e:
+        error = [e]
+        print(error)
+        evo_request = requests.get(
+                    'https://pokeapi.co/api/v2/evolution-chain/{poke_id}'
+                    .format(poke_id=pokemon_ID))
+        evo_response = evo_request.json()
+        substrat1 = list(evo_response.items())[2][1]
+        substrat2 = substrat1.get('species')
+        pre_evo = substrat2.get('name')
+        poke_name = False
+        return pre_evo.title(), poke_name
+
+
+# build up of other functions that will be need it to finisht the program
 
 
 # setting the main function to run according of the commmand
@@ -73,17 +89,39 @@ def poke_list():
 
 
 def poke_evolution():
-    if args.table is None:
+    # print(args)
+    if args.table is False:
         poke_ID = args.evo_ID
         pre_evo, evo_name = poke_R_evolution(poke_ID)
-        print('{evolves_from} has evolved into an {evolves_to}'
-              .format(evolves_from=pre_evo, evolves_to=evo_name))
+        if evo_name:
+            print('{evolves_from} has evolved to {evolves_to}'
+                  .format(evolves_from=pre_evo, evolves_to=evo_name))
+        else:
+            print(f'The Pokemon {pre_evo} that you selected has no evolution')
+    elif args.table:
+        poke_ID = args.evo_ID
+        pre_evo, evo_name = poke_R_evolution(poke_ID)
+        if evo_name:
+            headers = ['ID', 'PokeName', 'EvoName']
+            data = [poke_ID, pre_evo, evo_name]
+            table_header = '|' + '|'. join(f'{h.center(len(str(c))+2)}'
+                                           for h, c in
+                                           zip(headers, data)) + '|'
+            table_separation = '|' + '|'.join('-' * (len(str(c))+2)
+                                              for c in data) + '|'
+            table = '|' + '|'.join(str(d).center(len(str(d))+2)for
+                                   d, h in zip(data, headers)) + '|'
+            print(table_header)
+            print(table_separation)
+            print(table)
+        else:
+            print(f'The Pokemon {pre_evo} that you selected has no evolution')
 
 
 # Parsers - part of the code where the parser are set
 # main parser set
 parser = argparse.ArgumentParser(
-    prog='Pokedex CLI', description='CLI por getting pokemon data',
+    prog='Pokedex CLI', description='CLI for getting pokemon data',
     epilog='Thanks see  you next time')
 parser.add_argument('pokedex', type=str,
                     help='Command to access pokedex information')
@@ -94,15 +132,17 @@ sub_list.add_argument('-n', '--number', type=int, help='Display the pokemon')
 sub_evo = subparser.add_parser(
     'evolution', help='Show the given pokemon evolution in a table')
 sub_evo.add_argument(
+    '-t', '--table', action='store_true',
+    help='Show the given pokemon evolution in a table')
+sub_evo.add_argument(
                     'evo_ID',
                     type=int,
                     help='ID of the pokemon you need its evolution')
-sub_evo.add_argument(
-    '-t', '--table', help='Show the given pokemon evolution in a table')
 args = parser.parse_args()
 
 
 def main():
+    # print(args.command)
     if args.command == 'list':
         poke_list()
     elif args.command == 'evolution':
